@@ -6,7 +6,9 @@ class Availability
   def available_between?(checkin, checkout)
     checkout = checkout.prev_day # the checkout day is not considered
     months_days = months_between(checkin, checkout).select_map(:days)
-    prepare_array_of_months_days(months_days, checkin.day, checkout.day)
+    checkout_day = checkout.day
+    checkout_day = nil if months_days.length == 1 && (checkin.year*100+checkin.month < checkout.year*100+checkout.month)
+    prepare_array_of_months_days(months_days, checkin.day, checkout_day)
     available?(months_days.join)
   end
 
@@ -16,8 +18,9 @@ class Availability
   def prepare_array_of_months_days(months_days, checkin_day, checkout_day)
     checkin_month = 0 # checkin month is always the first month in array
     checkout_month = -1 # checkout month is always the last month in array
-    months_days[checkin_month] = slice_checkin_month months_days[checkin_month], checkin_day
-    months_days[checkout_month] = truncate_checkout_month months_days[checkout_month], checkout_day
+
+    months_days[checkout_month] = truncate_checkout_month( months_days[checkout_month], checkout_day ) if checkout_day
+    months_days[checkin_month] = slice_checkin_month( months_days[checkin_month], checkin_day )
   end
 
   def available?(months_days)

@@ -50,6 +50,11 @@ describe Availability do
       year: 2016, month: 3,
       #      1234567890123456789012345678901
       days: "0000000011111111111111111111111")
+
+    db[:availabilities].insert(
+      year: 2017, month: 12,
+      #      1234567890123456789012345678901
+      days: "1111111111111111111111111111110")
   end
 
   subject(:availability) { described_class.new(db) }
@@ -132,13 +137,26 @@ describe Availability do
           Date.new(2015, 7, 18),
           Date.new(2015, 8, 2)))
     }
-
+    # no DB entry for 2017-12 to 2018-12, considered to be all available
+    it {
+      is_expected.to(
+        be_available_between(
+          Date.new(2017, 12, 31),
+          Date.new(2018, 12, 2)))
+    }
     # checkin is blocked
     it {
       is_expected.to_not(
         be_available_between(
           Date.new(2015, 7, 17),
           Date.new(2015, 8, 2)))
+    }
+    # same month
+    it {
+      is_expected.to(
+        be_available_between(
+          Date.new(2016, 3, 8),
+          Date.new(2016, 3, 9)))
     }
   end
 
@@ -171,6 +189,11 @@ describe Availability do
       array_of_months = %w(123 4 567)
       subject.prepare_array_of_months_days(array_of_months, 3, 1)
       expect(array_of_months).to eq(%w(3 4 5))
+    }
+    it {
+      array_of_months = ['1234567']
+      subject.prepare_array_of_months_days(array_of_months, 5, 6)
+      expect(array_of_months).to eq(%w(56))
     }
   end
 
